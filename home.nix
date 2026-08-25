@@ -73,6 +73,11 @@ in
     ];
 
     shellInit = ''
+      # GUI terminals can inherit a removed Homebrew Fish path in $SHELL even
+      # when Kitty starts the Nix-managed Fish binary. Export the stable Nix
+      # profile path so child processes, including Herdr, use the right shell.
+      set -gx SHELL "${config.home.profileDirectory}/bin/fish"
+
       # Multi-user Nix installation
       if not set --query __ETC_PROFILE_NIX_SOURCED
         if test -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish
