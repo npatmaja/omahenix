@@ -38,6 +38,12 @@ echo
 echo "Checking flake..."
 nix "${NIX_ARGS[@]}" flake check path:.
 
-# echo "Activating Home Manager..."
+echo "Activating Home Manager..."
 nix "${NIX_ARGS[@]}" run nixpkgs#home-manager -- \
   switch --flake "path:.#${system}"
+
+if [ "$system" = "aarch64-darwin" ]; then
+  echo "Activating Nix Darwin..."
+  sudo -H nix "${NIX_ARGS[@]}" run github:nix-darwin/nix-darwin -- \
+    switch --flake "path:.#${system}"
+fi

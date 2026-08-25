@@ -52,6 +52,7 @@ The script:
 2. Creates `machine.nix` with local settings. This file stays outside Git.
 3. Checks the configuration.
 4. Applies the Home Manager setup.
+5. On Apple Silicon macOS, prompts for `sudo` and applies the Nix Darwin system configuration, including Kitty.
 
 The setup may ask you to add Fish to `/etc/shells` before macOS or Linux will accept it as your login shell. Follow the command printed by the script, then run `./bootstrap.sh` again.
 
@@ -70,17 +71,9 @@ nvm --version
 
 The prompt should now use Hydro.
 
-### Configure macOS with Nix Darwin
+### Nix Darwin on macOS
 
-On Apple Silicon macOS, run this after `./bootstrap.sh` has generated `machine.nix` to apply the system configuration:
-
-```sh
-sudo -H nix --extra-experimental-features "nix-command flakes" \
-  run github:nix-darwin/nix-darwin -- \
-  switch --flake "path:.#aarch64-darwin"
-```
-
-Nix Darwin installs Kitty as a system package. Confirm it after activation:
+`./bootstrap.sh` automatically applies the Apple Silicon Nix Darwin configuration after Home Manager. It prompts for `sudo`; Nix Darwin installs Kitty as a system package. Confirm it after activation:
 
 ```sh
 kitty --version
@@ -122,12 +115,6 @@ nix --extra-experimental-features "nix-command flakes" flake update
 ./bootstrap.sh
 ```
 
-On Apple Silicon macOS, re-apply the Nix Darwin system configuration after changing the lock file or `darwin.nix`:
-
-```sh
-sudo -H nix --extra-experimental-features "nix-command flakes" \
-  run github:nix-darwin/nix-darwin -- \
-  switch --flake "path:.#aarch64-darwin"
-```
+`./bootstrap.sh` also re-applies the Nix Darwin system configuration on Apple Silicon macOS.
 
 Commit `flake.lock` so every machine uses the same package versions.
