@@ -48,6 +48,46 @@ echo
 echo "Checking flake..."
 nix "${NIX_ARGS[@]}" flake check path:.
 
+prepare_darwin_activation() {
+  local etc_file
+  local managed_target
+  local current_target
+  local backup_file
+  local fish_login_shell
+
+  echo "Preparing Nix Darwin activation..."
+  sudo -v
+
+  # nix-darwin requires these files to be absent before it can take ownership.
+  # Preserve any installer- or user-provided versions rather than overwriting
+  # them. Files already linked into /etc/static are nix-darwin managed.
+  for etc_file in /etc/bashrc /etc/zshrc; do
+    managed_target="/etc/static/${etc_file##*/}"
+    current_target="$(/usr/bin/readlink "$etc_file" 2>/dev/null || true)"
+    if [ -e "$etc_file" ] && [ "$current_target" != "$managed_target" ]; then
+      backup_file="${etc_file}.before-nix-darwin"
+      if [ -e "$backup_file" ]; then
+        echo "Cannot preserve $etc_file: $backup_file already exists." >&2
+        echo "Review the files and retry the bootstrap." >&2
+        return 1
+      fi
+
+      echo "Preserving $etc_file as $backup_file"
+      sudo /bin/mv "$etc_file" "$backup_file"
+    fi
+  done
+
+  fish_login_shell="$home_directory/.nix-profile/bin/fish"
+  if ! sudo /usr/bin/grep -Fxq "$fish_login_shell" /etc/shells; then
+    echo "Adding Nix-managed Fish to /etc/shells"
+    printf '%s\n' "$fish_login_shell" | sudo /usr/bin/tee -a /etc/shells >/dev/null
+  fi
+}
+
+if [ "$system" = "aarch64-darwin" ]; then
+  prepare_darwin_activation
+fi
+
 backup_extension="before-home-manager-$(date +%Y%m%d-%H%M%S)"
 
 echo "Activating Home Manager..."

@@ -54,7 +54,7 @@ The script:
 4. Applies the Home Manager setup, preserving any conflicting existing configuration files with a timestamped `.before-home-manager-*` suffix.
 5. On Apple Silicon macOS, prompts for `sudo` and applies the Nix Darwin system configuration, including Kitty.
 
-The setup may ask you to add Fish to `/etc/shells` before macOS or Linux will accept it as your login shell. Follow the command printed by the script, then run `./bootstrap.sh` again.
+On Apple Silicon macOS, the script adds the Nix-managed Fish path to `/etc/shells` before activating Home Manager. On Linux, follow any Fish login-shell command printed by the script, then run `./bootstrap.sh` again.
 
 Start a fresh Fish session after setup:
 
@@ -79,14 +79,7 @@ The prompt should now use Hydro.
 kitty --version
 ```
 
-On the first activation, Nix Darwin may refuse to replace existing `/etc/bashrc` or `/etc/zshrc` files. Inspect them first, then preserve them as backups and retry:
-
-```sh
-sudo mv /etc/bashrc /etc/bashrc.before-nix-darwin
-sudo mv /etc/zshrc /etc/zshrc.before-nix-darwin
-```
-
-Nix Darwin manages the replacement files after a successful switch. The renamed files remain available as backups.
+Before the first Nix Darwin activation, the script preserves existing `/etc/bashrc` and `/etc/zshrc` as `.before-nix-darwin` backups so Nix Darwin can take ownership. It will stop rather than overwrite an existing backup; review that backup before retrying. Nix Darwin manages the replacement files after a successful switch.
 
 ## Make changes
 

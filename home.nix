@@ -32,7 +32,7 @@ in
 
     # programming languages
     odin
-    cargo
+    rustup
 
     neovim
     tree-sitter
@@ -198,13 +198,23 @@ in
       exit 1
     fi
 
+    malformed_git_local_config='[user]\n    name = Your Name\n    email = your@email.com\n'
+    should_create_git_local_config=false
+
     if [ ! -e "$git_local_config" ]; then
+      should_create_git_local_config=true
+    elif [ "$(cat "$git_local_config")" = "$malformed_git_local_config" ]; then
+      echo "Repairing malformed Git identity placeholder: $git_local_config"
+      should_create_git_local_config=true
+    fi
+
+    if [ "$should_create_git_local_config" = true ]; then
       if [ -n "''${DRY_RUN-}" ]; then
         echo "Would create Git identity placeholder: $git_local_config"
       else
         (
           umask 077
-          printf '%s\\n' \
+          printf '%s\n' \
             '[user]' \
             '    name = Your Name' \
             '    email = your@email.com' \
