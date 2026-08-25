@@ -48,9 +48,11 @@ echo
 echo "Checking flake..."
 nix "${NIX_ARGS[@]}" flake check path:.
 
+backup_extension="before-home-manager-$(date +%Y%m%d-%H%M%S)"
+
 echo "Activating Home Manager..."
 nix "${NIX_ARGS[@]}" run nixpkgs#home-manager -- \
-  switch --flake "path:.#${system}"
+  switch -b "$backup_extension" --flake "path:.#${system}"
 
 if [ "$system" = "aarch64-darwin" ]; then
   echo "Activating Nix Darwin..."

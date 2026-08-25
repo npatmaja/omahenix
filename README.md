@@ -51,7 +51,7 @@ The script:
 1. Detects your operating system, username, and home folder.
 2. Creates `machine.nix` with local settings. This file stays outside Git.
 3. Checks the configuration.
-4. Applies the Home Manager setup.
+4. Applies the Home Manager setup, preserving any conflicting existing configuration files with a timestamped `.before-home-manager-*` suffix.
 5. On Apple Silicon macOS, prompts for `sudo` and applies the Nix Darwin system configuration, including Kitty.
 
 The setup may ask you to add Fish to `/etc/shells` before macOS or Linux will accept it as your login shell. Follow the command printed by the script, then run `./bootstrap.sh` again.
