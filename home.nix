@@ -35,6 +35,7 @@ in
     cargo
 
     neovim
+    tree-sitter
     git
     ripgrep
     fd
