@@ -168,6 +168,36 @@ in
 
   xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink nvimConfig;
 
+  xdg.configFile."git".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config/git";
+
+  # Keep personal Git identity out of the tracked dotfiles repository. The
+  # shared Git config includes this file, and it is created only on first use.
+  home.activation.createGitLocalConfig = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
+    git_config_dir="${dotfiles}/config/git"
+    git_local_config="$git_config_dir/config.local"
+
+    if [ ! -d "$git_config_dir" ]; then
+      echo "Git dotfiles directory does not exist: $git_config_dir" >&2
+      exit 1
+    fi
+
+    if [ ! -e "$git_local_config" ]; then
+      if [ -n "''${DRY_RUN-}" ]; then
+        echo "Would create Git identity placeholder: $git_local_config"
+      else
+        (
+          umask 077
+          printf '%s\\n' \
+            '[user]' \
+            '    name = Your Name' \
+            '    email = your@email.com' \
+            > "$git_local_config"
+        )
+      fi
+    fi
+  '';
+
   # Fisher previously owned these plugins. Remove only its copies so Fish does
   # not load the same plugin twice after Home Manager takes ownership.
   home.activation.removeFisherHydroAndNvm = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
