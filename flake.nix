@@ -15,10 +15,9 @@
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
-		herdr.url = "github:herdrdev/herdr/v0.8.2";
 	};
 
-	outputs = { self, nixpkgs, home-manager, nix-darwin, herdr, ... }:
+	outputs = { self, nixpkgs, home-manager, nix-darwin, ... }:
 		let
 			systems = [
 				"aarch64-darwin"
@@ -28,9 +27,6 @@
 			mkHome = system:
 				home-manager.lib.homeManagerConfiguration {
 					pkgs = nixpkgs.legacyPackages.${system};
-					extraSpecialArgs = {
-						inherit herdr;
-					};
 					modules = [
 						./machine.nix
 						./home.nix

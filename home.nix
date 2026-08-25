@@ -2,7 +2,6 @@
   config,
   pkgs,
   lib,
-  herdr,
   ...
 }:
 
@@ -29,6 +28,7 @@ in
     gh
     lazygit
     hunk
+    herdr
 
     # programming languages
     odin
