@@ -125,6 +125,21 @@ in
     '';
   };
 
+  programs.kitty = {
+    enable = true;
+    package = null;
+    themeFile = "Catppuccin-Macchiato";
+    font = {
+      package = pkgs.jetbrains-mono;
+      name = "JetBrains Mono";
+      size = 13;
+    };
+    settings = {
+      shell = "${config.home.profileDirectory}/bin/fish -l";
+    };
+    shellIntegration.enableFishIntegration = true;
+  };
+
   # Keep the account login shell pointed at the stable profile link rather than
   # a versioned Nix-store path. The profile directory derives from the home
   # directory supplied by machine.nix.

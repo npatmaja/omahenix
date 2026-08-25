@@ -12,7 +12,7 @@
 
 		nix-darwin = {
 			url = "github:nix-darwin/nix-darwin";
-			inputs.nixpkg.follows = "nixpkgs";
+			inputs.nixpkgs.follows = "nixpkgs";
 		};
 
 		herdr.url = "github:herdrdev/herdr/v0.8.2";
@@ -39,8 +39,21 @@
 
 			forAllSystems = f:
 				nixpkgs.lib.genAttrs systems (system: f system);
+
+			mkDarwin = system:
+				nix-darwin.lib.darwinSystem {
+					inherit system;
+					specialArgs = {
+						machine = import ./machine.nix;
+					};
+					modules = [
+						./darwin.nix
+					];
+				};
 		in
 		{
+			darwinConfigurations.aarch64-darwin = mkDarwin "aarch64-darwin";
+
 			homeConfigurations = forAllSystems mkHome;
 		};
 }
