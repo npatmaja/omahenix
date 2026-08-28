@@ -55,6 +55,7 @@ in
     tailwindcss-language-server
     nixd
     ols # odin
+    svelte-language-server
   ];
 
   programs.home-manager.enable = true;
@@ -191,8 +192,7 @@ in
 
   xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink nvimConfig;
 
-  xdg.configFile."git".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config/git";
+  xdg.configFile."git".source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config/git";
 
   # Keep personal Git identity out of the tracked dotfiles repository. The
   # shared Git config includes this file, and it is created only on first use.
