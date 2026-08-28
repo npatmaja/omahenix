@@ -49,6 +49,7 @@ in
     # LSPs
     lua-language-server
     gopls
+    typescript-language-server
     marksman
     vscode-langservers-extracted
     tailwindcss-language-server
@@ -142,6 +143,7 @@ in
     };
     settings = {
       shell = "${config.home.profileDirectory}/bin/fish -l";
+      clipboard_control = "write-clipboard write-primary read-clipboard read-primary";
     };
     shellIntegration.enableFishIntegration = true;
   };
