@@ -17,6 +17,16 @@ let
   repos = "${home}/.local/src";
   dotfiles = "${repos}/dotfiles";
   nvimConfig = "${repos}/kckstrt.nvim";
+
+  # Linked file by file so unmanaged functions in ~/.config/fish/functions
+  # survive. Add new entries here when the dotfiles repository gains one.
+  fishFunctions = [
+    "fsource"
+    "gac"
+    "gpo"
+    "gst"
+    "tns"
+  ];
 in
 {
   home.stateVersion = "26.11";
@@ -189,12 +199,25 @@ in
     fi
   '';
 
-  xdg.configFile."fish/themes/catppuccin-macchiato.theme".source =
-    "${catppuccinFish}/themes/catppuccin-macchiato.theme";
+  xdg.configFile = {
+    "fish/themes/catppuccin-macchiato.theme".source =
+      "${catppuccinFish}/themes/catppuccin-macchiato.theme";
 
-  xdg.configFile."nvim".source = config.lib.file.mkOutOfStoreSymlink nvimConfig;
+    "nvim".source = config.lib.file.mkOutOfStoreSymlink nvimConfig;
 
-  xdg.configFile."git".source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config/git";
+    "git".source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config/git";
+  }
+  // lib.listToAttrs (
+    map (
+      name:
+      lib.nameValuePair "fish/functions/${name}.fish" {
+        source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config/fish/functions/${name}.fish";
+        # Fisher-era copies of these functions are byte-identical, so replacing
+        # them needs no backup.
+        force = true;
+      }
+    ) fishFunctions
+  );
 
   # Keep personal Git identity out of the tracked dotfiles repository. The
   # shared Git config includes this file, and it is created only on first use.
