@@ -9,6 +9,8 @@ if ! command -v nix >/dev/null 2>&1; then
 fi
 
 NIX_EXPERIMENTAL_FEATURES="nix-command flakes"
+NUMTIDE_CACHE="https://cache.numtide.com"
+NUMTIDE_CACHE_KEY="niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
 NIX_ARGS=(
   --extra-experimental-features
   "$NIX_EXPERIMENTAL_FEATURES"
@@ -45,8 +47,29 @@ echo "Generated machine.nix:"
 cat machine.nix
 echo
 
-echo "Checking flake..."
-nix "${NIX_ARGS[@]}" flake check path:.
+configure_linux_numtide_cache() {
+  local cache_config="/etc/nix/nix.conf.d/omahenix-numtide.conf"
+  local include_line="!include $cache_config"
+
+  if ! command -v systemctl >/dev/null 2>&1; then
+    echo "The Numtide cache requires systemd-managed Nix on Linux." >&2
+    return 1
+  fi
+
+  echo "Configuring the Numtide Nix binary cache..."
+  sudo -v
+  sudo /usr/bin/install -d -m 0755 /etc/nix/nix.conf.d
+  sudo /usr/bin/tee "$cache_config" >/dev/null <<EOF
+extra-substituters = $NUMTIDE_CACHE
+extra-trusted-public-keys = $NUMTIDE_CACHE_KEY
+EOF
+  if ! sudo /usr/bin/grep -Fxq "$include_line" /etc/nix/nix.conf; then
+    printf '\n%s\n' "$include_line" | sudo /usr/bin/tee -a /etc/nix/nix.conf >/dev/null
+  fi
+  if systemctl is-active --quiet nix-daemon.service; then
+    sudo systemctl restart nix-daemon.service
+  fi
+}
 
 configure_linux_tailscaled() {
   local tailscaled_binary
@@ -133,6 +156,17 @@ prepare_darwin_activation() {
 
 if [ "$system" = "aarch64-darwin" ]; then
   prepare_darwin_activation
+elif [ "$system" = "x86_64-linux" ]; then
+  configure_linux_numtide_cache
+fi
+
+echo "Checking flake..."
+nix "${NIX_ARGS[@]}" flake check path:.
+
+if [ "$system" = "aarch64-darwin" ]; then
+  echo "Activating Nix Darwin..."
+  sudo -H env "NIX_CONFIG=$NIX_CONFIG" nix "${NIX_ARGS[@]}" run github:nix-darwin/nix-darwin -- \
+    switch --flake "path:.#${system}"
 fi
 
 backup_extension="before-home-manager-$(date +%Y%m%d-%H%M%S)"
@@ -141,10 +175,6 @@ echo "Activating Home Manager..."
 nix "${NIX_ARGS[@]}" run nixpkgs#home-manager -- \
   switch -b "$backup_extension" --flake "path:.#${system}"
 
-if [ "$system" = "aarch64-darwin" ]; then
-  echo "Activating Nix Darwin..."
-  sudo -H env "NIX_CONFIG=$NIX_CONFIG" nix "${NIX_ARGS[@]}" run github:nix-darwin/nix-darwin -- \
-    switch --flake "path:.#${system}"
-elif [ "$system" = "x86_64-linux" ]; then
+if [ "$system" = "x86_64-linux" ]; then
   configure_linux_tailscaled
 fi

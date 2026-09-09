@@ -4,6 +4,8 @@
 	inputs = {
 		nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
+		llm-agents.url = "github:numtide/llm-agents.nix";
+
 		# Home manager
 		home-manager = {
 			url = "github:nix-community/home-manager";
@@ -17,7 +19,7 @@
 
 	};
 
-	outputs = { self, nixpkgs, home-manager, nix-darwin, ... }:
+	outputs = inputs@{ self, nixpkgs, home-manager, nix-darwin, ... }:
 		let
 			systems = [
 				"aarch64-darwin"
@@ -27,6 +29,9 @@
 			mkHome = system:
 				home-manager.lib.homeManagerConfiguration {
 					pkgs = nixpkgs.legacyPackages.${system};
+					extraSpecialArgs = {
+						llmAgents = inputs."llm-agents";
+					};
 					modules = [
 						./machine.nix
 						./home.nix

@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  llmAgents,
   ...
 }:
 
@@ -38,7 +39,7 @@ in
     gh
     lazygit
     hunk
-    herdr
+    llmAgents.packages.${pkgs.stdenv.hostPlatform.system}.herdr
     tailscale
 
     # programming languages
