@@ -29,10 +29,11 @@ in
     lazygit
     hunk
     herdr
+    tailscale
 
     # programming languages
     odin
-    rustup
+    (lib.lowPrio rustup)
 
     neovim
     tree-sitter
@@ -49,6 +50,7 @@ in
     # LSPs
     lua-language-server
     gopls
+    rust-analyzer
     typescript-language-server
     marksman
     vscode-langservers-extracted

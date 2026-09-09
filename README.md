@@ -52,7 +52,8 @@ The script:
 2. Creates `machine.nix` with local settings. This file stays outside Git.
 3. Checks the configuration.
 4. Applies the Home Manager setup, preserving any conflicting existing configuration files with a timestamped `.before-home-manager-*` suffix.
-5. On Apple Silicon macOS, prompts for `sudo` and applies the Nix Darwin system configuration, including Kitty.
+5. On Apple Silicon macOS, prompts for `sudo` and applies the Nix Darwin system configuration, including Kitty and the Tailscale daemon.
+6. On Linux, installs and enables a systemd `tailscaled` service backed by the Nix-managed Tailscale package.
 
 On Apple Silicon macOS, the script adds the Nix-managed Fish path to `/etc/shells` before activating Home Manager. On Linux, follow any Fish login-shell command printed by the script, then run `./bootstrap.sh` again.
 
@@ -70,6 +71,16 @@ nvm --version
 ```
 
 The prompt should now use Hydro.
+
+### Tailscale
+
+Tailscaled starts automatically on macOS through nix-darwin and on systemd-based Linux distributions (including WSL with systemd enabled) through the bootstrap-managed system service. Authenticate each device after its first activation:
+
+```sh
+tailscale up
+```
+
+On macOS, use one daemon owner only. See [Keep Tailscale.app on macOS](docs/tailscale-macos-gui.md) to retain the GUI instead of the nix-darwin service.
 
 ### Nix Darwin on macOS
 

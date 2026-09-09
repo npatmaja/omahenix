@@ -48,6 +48,53 @@ echo
 echo "Checking flake..."
 nix "${NIX_ARGS[@]}" flake check path:.
 
+configure_linux_tailscaled() {
+  local tailscaled_binary
+  local tailscaled_link="$home_directory/.nix-profile/bin/tailscaled"
+
+  if ! command -v systemctl >/dev/null 2>&1; then
+    echo "Tailscale requires systemd on Linux." >&2
+    echo "Enable systemd in WSL and restart the distribution before re-running bootstrap." >&2
+    return 1
+  fi
+
+  if [ ! -e "$tailscaled_link" ]; then
+    echo "Nix-managed tailscaled was not installed at $tailscaled_link." >&2
+    return 1
+  fi
+  tailscaled_binary="$(readlink -f "$tailscaled_link")"
+  if [ ! -x "$tailscaled_binary" ]; then
+    echo "Nix-managed tailscaled is not executable: $tailscaled_binary" >&2
+    return 1
+  fi
+
+  echo "Configuring Tailscale system service..."
+  sudo -v
+  sudo /usr/bin/install -d -m 0755 /etc/systemd/system
+  sudo /usr/bin/tee /etc/systemd/system/tailscaled.service >/dev/null <<EOF
+[Unit]
+Description=Tailscale node agent
+Documentation=https://tailscale.com/kb/
+Wants=network-pre.target
+After=network-pre.target
+
+[Service]
+Type=simple
+ExecStart=$tailscaled_binary --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock
+Restart=on-failure
+RestartSec=5
+RuntimeDirectory=tailscale
+RuntimeDirectoryMode=0755
+StateDirectory=tailscale
+StateDirectoryMode=0700
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now tailscaled.service
+}
+
 prepare_darwin_activation() {
   local etc_file
   local managed_target
@@ -98,4 +145,6 @@ if [ "$system" = "aarch64-darwin" ]; then
   echo "Activating Nix Darwin..."
   sudo -H env "NIX_CONFIG=$NIX_CONFIG" nix "${NIX_ARGS[@]}" run github:nix-darwin/nix-darwin -- \
     switch --flake "path:.#${system}"
+elif [ "$system" = "x86_64-linux" ]; then
+  configure_linux_tailscaled
 fi
