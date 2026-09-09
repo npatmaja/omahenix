@@ -7,10 +7,8 @@
   services.openssh = {
     enable = true;
     extraConfig = ''
-      AuthenticationMethods publickey
       PubkeyAuthentication yes
       PasswordAuthentication no
-      KbdInteractiveAuthentication no
     '';
   };
 
