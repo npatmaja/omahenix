@@ -123,7 +123,6 @@ prepare_darwin_activation() {
   local managed_target
   local current_target
   local backup_file
-  local fish_login_shell
 
   echo "Preparing Nix Darwin activation..."
   sudo -v
@@ -146,11 +145,21 @@ prepare_darwin_activation() {
       sudo /bin/mv "$etc_file" "$backup_file"
     fi
   done
+}
 
-  fish_login_shell="$home_directory/.nix-profile/bin/fish"
-  if ! sudo /usr/bin/grep -Fxq "$fish_login_shell" /etc/shells; then
-    echo "Adding Nix-managed Fish to /etc/shells"
-    printf '%s\n' "$fish_login_shell" | sudo /usr/bin/tee -a /etc/shells >/dev/null
+# Home Manager's setFishLoginShell activation runs chsh, which refuses a shell
+# that /etc/shells does not list. Register it before activation so the switch
+# does not stop half-way with a manual follow-up step.
+register_fish_login_shell() {
+  local fish_login_shell="$home_directory/.nix-profile/bin/fish"
+
+  if grep -Fxq "$fish_login_shell" /etc/shells 2>/dev/null; then
+    return
+  fi
+
+  echo "Adding Nix-managed Fish to /etc/shells"
+  if ! printf '%s\n' "$fish_login_shell" | sudo tee -a /etc/shells >/dev/null; then
+    echo "Could not update /etc/shells; the login shell will be left alone." >&2
   fi
 }
 
@@ -168,6 +177,8 @@ if [ "$system" = "aarch64-darwin" ]; then
   sudo -H env "NIX_CONFIG=$NIX_CONFIG" nix "${NIX_ARGS[@]}" run github:nix-darwin/nix-darwin -- \
     switch --flake "path:.#${system}"
 fi
+
+register_fish_login_shell
 
 backup_extension="before-home-manager-$(date +%Y%m%d-%H%M%S)"
 

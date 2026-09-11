@@ -183,18 +183,29 @@ in
         ''
       else
         ''
-          current_shell="$(${pkgs.glibc.bin}/bin/getent passwd "$USER" | ${pkgs.gawk}/bin/awk -F: '{ print $7 }')"
-          chsh_command=${pkgs.util-linux}/bin/chsh
+          current_shell="$(${pkgs.getent}/bin/getent passwd "$USER" | ${pkgs.gawk}/bin/awk -F: '{ print $7 }')"
           grep_command=${pkgs.gnugrep}/bin/grep
+
+          # chsh has to be the setuid system binary; a Nix store copy carries no
+          # setuid bit and cannot write /etc/passwd.
+          if [ -x /run/wrappers/bin/chsh ]; then
+            chsh_command=/run/wrappers/bin/chsh
+          else
+            chsh_command=/usr/bin/chsh
+          fi
         ''
     }
 
     if [ "$current_shell" != "$fish_login_shell" ]; then
       if "$grep_command" -Fxq "$fish_login_shell" /etc/shells; then
-        "$chsh_command" -s "$fish_login_shell" "$USER"
+        # Activation runs under set -e, and chsh needs a password prompt, so a
+        # failure here must not take the rest of the activation down with it.
+        if ! "$chsh_command" -s "$fish_login_shell" "$USER"; then
+          echo "Could not change the login shell. Run once: chsh -s $fish_login_shell"
+        fi
       else
         echo "Fish is managed by Home Manager, but the OS will not accept it as a login shell yet."
-        echo "Run once: sudo sh -c 'printf \\\"%s\\\\n\\\" $fish_login_shell >> /etc/shells'"
+        echo "Run once: echo $fish_login_shell | sudo tee -a /etc/shells"
         echo "Then re-run home-manager switch."
       fi
     fi

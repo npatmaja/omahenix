@@ -55,7 +55,7 @@ The script:
 5. On Apple Silicon macOS, prompts for `sudo` and applies the Nix Darwin system configuration, including Kitty and the Tailscale daemon.
 6. On Linux, installs and enables a systemd `tailscaled` service backed by the Nix-managed Tailscale package.
 
-On Apple Silicon macOS, the script adds the Nix-managed Fish path to `/etc/shells` before activating Home Manager. On Linux, follow any Fish login-shell command printed by the script, then run `./bootstrap.sh` again.
+The script adds the Nix-managed Fish path to `/etc/shells` before activating Home Manager, so Home Manager can point the account login shell at it. This needs `sudo` on both macOS and Linux.
 
 Start a fresh Fish session after setup:
 
