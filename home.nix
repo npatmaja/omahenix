@@ -38,8 +38,8 @@ in
     btop
     gh
     lazygit
-    hunk
     llmAgents.packages.${pkgs.stdenv.hostPlatform.system}.herdr
+    llmAgents.packages.${pkgs.stdenv.hostPlatform.system}.hunk
     tailscale
 
     # programming languages
@@ -72,6 +72,10 @@ in
   ];
 
   programs.home-manager.enable = true;
+
+  # Installs podman with the containers policy and registries config it needs
+  # off NixOS. On Darwin it also creates and starts the default podman machine.
+  services.podman.enable = true;
 
   # Fish
   programs.fish = {
@@ -218,6 +222,13 @@ in
     "nvim".source = config.lib.file.mkOutOfStoreSymlink nvimConfig;
 
     "git".source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config/git";
+
+    # Linked alone: ~/.config/herdr also holds herdr's logs and session state.
+    # The live copy is byte-identical, so replacing it needs no backup.
+    "herdr/config.toml" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${dotfiles}/config/herdr/config.toml";
+      force = true;
+    };
   }
   // lib.listToAttrs (
     map (
