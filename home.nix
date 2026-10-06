@@ -162,8 +162,12 @@ in
     settings = {
       shell = "${config.home.profileDirectory}/bin/fish -l";
       clipboard_control = "write-clipboard write-primary read-clipboard read-primary";
+      hide_window_decorations = false;
     };
     shellIntegration.enableFishIntegration = true;
+    darwinLaunchOptions = [
+      "--override=hide_window_decorations=no"
+    ];
   };
 
   # Keep the account login shell pointed at the stable profile link rather than
