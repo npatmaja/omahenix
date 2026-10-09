@@ -25,7 +25,18 @@
 
   environment.systemPackages = with pkgs; [
     kitty
+    omniwm
   ];
+
+  # Start OmniWM from the copy nix-darwin refreshes on every switch, so login
+  # never launches a stale Nix-store version.
+  launchd.user.agents.omniwm.serviceConfig = {
+    ProgramArguments = [
+      "/usr/bin/open"
+      "/Applications/Nix Apps/OmniWM.app"
+    ];
+    RunAtLoad = true;
+  };
 
   fonts.packages = with pkgs; [ nerd-fonts.jetbrains-mono ];
 }
